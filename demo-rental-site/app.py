@@ -33,14 +33,6 @@ def init_db():
                     "owner_name": "Анна Петрова", "owner_phone": "+7 (987) 654-32-10",
                     "is_ai_enabled": False, "is_premium": False, "views": 89,
                     "ai_strategies": []
-                },
-                {
-                    "id": "3", "title": "Трешка в новостройке", "price": 120000,
-                    "rooms": 3, "area": 95, "district": "ЮЗАО", "metro": "Тропарёво",
-                    "address": "ул. Академика Анохина, д. 32", "description": "Современная квартира",
-                    "owner_name": "Сергей Сидоров", "owner_phone": "+7 (926) 111-22-33",
-                    "is_ai_enabled": True, "is_premium": True, "views": 210,
-                    "ai_strategies": ["price_optimization", "analytics"]
                 }
             ], f, indent=2)
     
@@ -88,9 +80,7 @@ def apartments_list():
     data = load_apartments()
     return render_template('apartments.html', 
                          apartments=data, 
-                         total_count=len(data),
-                         districts=["Центральный", "СЗАО", "ЮЗАО", "ВАО", "ЗАО"],
-                         metros=["Тверская", "Строгино", "Тропарёво", "Курская", "Киевская"])
+                         total_count=len(data))
 
 # Страница объявления
 @app.route('/apartment/<id>')
@@ -143,64 +133,7 @@ def save_apartment():
     save_apartments(data)
     return redirect(f'/apartment/{new_id}')
 
-# Страница настройки ИИ
-@app.route('/apartment/<id>/ai')
-def ai_config(id):
-    data = load_apartments()
-    apt = next((x for x in data if x['id'] == id), None)
-    if not apt:
-        return "Объявление не найдено", 404
-    
-    ai_settings = load_ai_settings().get(id, {
-        'strategies': [],
-        'auto_reviews': False,
-        'auto_messages': False,
-        'analytics_enabled': False,
-        'max_price': apt.get('price', 0) * 1.3,
-        'min_rent_days': 30,
-        'priority': 'profit'
-    })
-    
-    return render_template('ai_config.html', 
-                         apartment=apt, 
-                         ai_settings=ai_settings,
-                         strategies_list=[
-                             {'id': 'price_optimization', 'name': 'Оптимизация цены'},
-                             {'id': 'auto_reviews', 'name': 'Работа с отзывами'},
-                             {'id': 'auto_messages', 'name': 'Ответ на сообщения'},
-                             {'id': 'analytics', 'name': 'Аналитика за месяц'}
-                         ])
-
-# Сохранение настроек ИИ
-@app.route('/api/apartment/<id>/ai', methods=['POST'])
-def save_ai_settings(id):
-    ai_settings = load_ai_settings()
-    
-    ai_settings[id] = {
-        'strategies': request.form.getlist('strategies'),
-        'auto_reviews': request.form.get('auto_reviews') == 'true',
-        'auto_messages': request.form.get('auto_messages') == 'true',
-        'analytics_enabled': request.form.get('analytics_enabled') == 'true',
-        'max_price': float(request.form.get('max_price', 0)),
-        'min_rent_days': int(request.form.get('min_rent_days', 30)),
-        'priority': request.form.get('priority', 'profit')
-    }
-    
-    with open(AI_FILE, 'w') as f:
-        json.dump(ai_settings, f, indent=2)
-    
-    # Обновляем объявление
-    data = load_apartments()
-    for apt in data:
-        if apt['id'] == id:
-            apt['is_ai_enabled'] = True
-            apt['ai_strategies'] = ai_settings[id]['strategies']
-            break
-    
-    save_apartments(data)
-    return redirect(f'/apartment/{id}')
-
-# API статистики
+# Статистика
 @app.route('/api/ai/stats')
 def ai_stats():
     apartments = load_apartments()
@@ -212,11 +145,6 @@ def ai_stats():
         'ai_settings_count': len(ai_settings),
         'avg_price': sum(a.get('price', 0) for a in apartments) / max(len(apartments), 1)
     })
-
-# API всех объявлений
-@app.route('/api/apartments')
-def api_apartments():
-    return jsonify(load_apartments())
 
 if __name__ == '__main__':
     init_db()
