@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ page_title }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <style>
+        .hero-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 80px 0;
+            margin-bottom: 40px;
+        }
+        .apartment-card {
+            transition: transform 0.3s;
+            margin-bottom: 20px;
+        }
+        .apartment-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .price-badge {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        .metro-badge {
+            background: #28a745;
+            color: white;
+        }
+        .carousel-item img {
+            height: 250px;
+            object-fit: cover;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .search-box {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- Навигация -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-primary" href="/">
+                <i class="bi bi-house-door"></i> Демо-Аренда
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/apartments">Все квартиры</a>
+                <a class="nav-link" href="/admin">Админ-панель</a>
+                <a class="nav-link" href="/api/stats" target="_blank">API Статистика</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Герой-секция -->
+    <div class="hero-section">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <h1 class="display-4 fw-bold">Аренда жилья в Москве</h1>
+                    <p class="lead">Найдите идеальную квартиру для жизни или работы в столице</p>
+                    <a href="/apartments" class="btn btn-light btn-lg mt-3">
+                        <i class="bi bi-search"></i> Найти квартиру
+                    </a>
+                </div>
+                <div class="col-lg-6">
+                    <div class="search-box">
+                        <h4 class="mb-4">Быстрый поиск</h4>
+                        <form action="/apartments" method="get">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Цена от</label>
+                                    <input type="number" class="form-control" name="min_price" placeholder="20000">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Цена до</label>
+                                    <input type="number" class="form-control" name="max_price" placeholder="60000">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Комнат</label>
+                                    <select class="form-select" name="rooms">
+                                        <option value="">Любое</option>
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                        <option value="3">3</option>
+                                        <option value="4">4+</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Район</label>
+                                    <select class="form-select" name="district">
+                                        <option value="">Любой</option>
+                                        {% for district in districts %}
+                                        <option value="{{ district }}">{{ district }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="bi bi-search"></i> Найти
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Статистика -->
+    <div class="container mb-5">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-number" id="total-apartments">0</div>
+                    <div class="text-muted">Всего квартир</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-number" id="active-apartments">0</div>
+                    <div class="text-muted">Активных объявлений</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-number" id="avg-price">0</div>
+                    <div class="text-muted">Средняя цена</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-number" id="total-views">0</div>
+                    <div class="text-muted">Просмотров</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Случайные квартиры -->
+    <div class="container">
+        <h2 class="mb-4">Случайные предложения</h2>
+        <div class="row" id="random-apartments">
+            <!-- Загружаются через JavaScript -->
+        </div>
+    </div>
+
+    <!-- Демонстрация API -->
+    <div class="container mt-5">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Демонстрация API</h5>
+                <p class="card-text">Этот сайт полностью работает на REST API. Попробуйте:</p>
+                <div class="mb-3">
+                    <code>GET /api/apartments</code> - список всех квартир (JSON)
+                </div>
+                <div class="mb-3">
+                    <code>GET /api/stats</code> - статистика сайта (JSON)
+                </div>
+                <div class="mb-3">
+                    <code>GET /api/apartment/ID</code> - конкретная квартира (JSON)
+                </div>
+                <button class="btn btn-outline-primary" onclick="testAPI()">
+                    <i class="bi bi-play-circle"></i> Протестировать API
+                </button>
+                <div id="api-result" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Футер -->
+    <footer class="bg-dark text-white mt-5 py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Демо-сайт аренды жилья</h5>
+                    <p>Симулятор площадки для демонстрации ИИ-агента анализа цен</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <p>Все данные сгенерированы автоматически</p>
+                    <p>Используется для тестирования и презентаций</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Загрузка статистики
+        fetch('/api/stats')
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    document.getElementById('total-apartments').textContent = data.stats.total_apartments;
+                    document.getElementById('active-apartments').textContent = data.stats.active_apartments;
+                    document.getElementById('avg-price').textContent = data.stats.average_price.toLocaleString() + ' ₽';
+                    document.getElementById('total-views').textContent = data.stats.total_views.toLocaleString();
+                }
+            });
+
+        // Загрузка случайных квартир
+        fetch('/api/apartments?limit=6')
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    const container = document.getElementById('random-apartments');
+                    data.apartments.forEach(apartment => {
+                        const col = document.createElement('div');
+                        col.className = 'col-md-4';
+                        col.innerHTML = `
+                            <div class="card apartment-card h-100">
+                                ${apartment.photos && apartment.photos.length > 0 ? 
+                                    `<img src="${apartment.photos[0]}" class="card-img-top" alt="${apartment.title}" style="height: 200px; object-fit: cover;">` :
+                                    `<div class="card-img-top bg-secondary" style="height: 200px;"></div>`
+                                }
+                                <div class="card-body">
+                                    <h5 class="card-title">${apartment.title}</h5>
+                                    <p class="card-text text-muted">
+                                        <i class="bi bi-geo-alt"></i> ${apartment.address}
+                                    </p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="price-badge text-primary">
+                                            ${apartment.price_per_month.toLocaleString()} ₽/мес
+                                        </span>
+                                        <span class="badge bg-info">
+                                            ${apartment.rooms} комн.
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="card-footer">
+                                    <a href="/apartment/${apartment.id}" class="btn btn-outline-primary w-100">
+                                        Подробнее
+                                    </a>
+                                </div>
+                            </div>
+                        `;
+                        container.appendChild(col);
+                    });
+                }
+            });
+
+        // Тестирование API
+        function testAPI() {
+            const resultDiv = document.getElementById('api-result');
+            resultDiv.innerHTML = '<div class="alert alert-info">Тестируем API...</div>';
+            
+            fetch('/api/apartments?limit=3')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        let html = '<div class="alert alert-success"><strong>API работает!</strong><br>';
+                        html += `Получено ${data.count} квартир:<br>`;
+                        data.apartments.forEach(apt => {
+                            html += `• ${apt.title}: ${apt.price_per_month.toLocaleString()} ₽<br>`;
+                        });
+                        html += '</div>';
+                        resultDiv.innerHTML = html;
+                    }
+                })
+                .catch(error => {
+                    resultDiv.innerHTML = `<div class="alert alert-danger">Ошибка: ${error}</div>`;
+                });
+        }
+    </script>
+</body>
+</html>

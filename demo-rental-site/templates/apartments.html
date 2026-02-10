@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ apartment.title }} - RentalAI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/css/splide.min.css">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3a0ca3;
+            --accent-color: #4cc9f0;
+        }
+        
+        .apartment-header {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .price-badge {
+            font-size: 2em;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+        
+        .ai-status-badge {
+            background: linear-gradient(135deg, var(--accent-color) 0%, #4895ef 100%);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .splide__slide img {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+            border-radius: 15px;
+        }
+        
+        .info-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            height: 100%;
+        }
+        
+        .info-card h5 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .amenity-badge {
+            background: #e9ecef;
+            color: #495057;
+            padding: 8px 15px;
+            border-radius: 10px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+        
+        .ai-feature-card {
+            background: linear-gradient(135deg, rgba(67, 97, 238, 0.05) 0%, rgba(76, 201, 240, 0.05) 100%);
+            border: 2px solid rgba(67, 97, 238, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .ai-feature-card.active {
+            border-color: var(--accent-color);
+            background: linear-gradient(135deg, rgba(76, 201, 240, 0.1) 0%, rgba(67, 97, 238, 0.1) 100%);
+        }
+        
+        .ai-feature-card i {
+            font-size: 1.5em;
+            color: var(--accent-color);
+            margin-bottom: 10px;
+        }
+        
+        .analytics-chart {
+            height: 200px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: flex-end;
+            padding: 20px;
+            gap: 10px;
+        }
+        
+        .chart-bar {
+            flex: 1;
+            background: var(--primary-color);
+            border-radius: 5px 5px 0 0;
+            position: relative;
+        }
+        
+        .chart-bar-label {
+            position: absolute;
+            bottom: -25px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 0.8em;
+            color: #6c757d;
+        }
+        
+        .similar-card {
+            border: none;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease;
+            height: 100%;
+        }
+        
+        .similar-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .similar-card img {
+            height: 150px;
+            object-fit: cover;
+            width: 100%;
+        }
+        
+        .contact-card {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 25px;
+            position: sticky;
+            top: 20px;
+        }
+        
+        .contact-card h4 {
+            color: white;
+            margin-bottom: 20px;
+        }
+        
+        .price-history-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .price-change {
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 0.9em;
+        }
+        
+        .price-change.up {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .price-change.down {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <!-- Навигация -->
+    <nav class="navbar navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-house-heart-fill me-2"></i>
+                <span style="color: var(--primary-color);">Rental</span><span style="color: var(--accent-color);">AI</span>
+            </a>
+            <div>
+                <a href="/apartments" class="btn btn-outline-primary btn-sm me-2">
+                    <i class="bi bi-arrow-left me-1"></i>К списку
+                </a>
+                {% if apartment.is_ai_enabled %}
+                <span class="ai-status-badge">
+                    <i class="bi bi-robot"></i> ИИ-агент активен
+                </span>
+                {% else %}
+                <a href="/apartment/{{ apartment.id }}/ai" class="btn btn-primary btn-sm">
+                    <i class="bi bi-robot me-1"></i>Подключить ИИ
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <!-- Заголовок и цена -->
+        <div class="apartment-header">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="fw-bold mb-3">{{ apartment.title }}</h1>
+                    <div class="d-flex align-items-center gap-4 mb-3">
+                        <span class="price-badge">{{ apartment.price|int }} ₽/мес</span>
+                        <span class="badge bg-secondary fs-6">{{ apartment.rooms }} комн.</span>
+                        <span class="badge bg-light text-dark fs-6">{{ apartment.area|int }} м²</span>
+                        {% if apartment.is_premium %}
+                        <span class="badge bg-warning text-dark fs-6">ПРЕМИУМ</span>
+                        {% endif %}
+                    </div>
+                    <p class="mb-0">
+                        <i class="bi bi-geo-alt-fill me-2"></i>
+                        <strong>{{ apartment.address }}</strong>
+                        <span class="text-muted ms-2">({{ apartment.district }}, м. {{ apartment.metro }})</span>
+                    </p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <div class="d-flex flex-column align-items-end gap-3">
+                        <div class="text-muted">
+                            <i class="bi bi-eye me-1"></i> {{ apartment.views }} просмотров
+                        </div>
+                        {% if apartment.is_ai_enabled %}
+                        <div class="d-flex gap-2">
+                            {% for strategy in apartment.ai_strategies %}
+                            <span class="badge bg-primary">{{ strategy }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <!-- Основная колонка -->
+            <div class="col-lg-8">
+                <!-- Фото -->
+                {% if apartment.photos %}
+                <div class="info-card">
+                    <h5>
+                        <i class="bi bi-images me-2"></i>Фотографии
+                    </h5>
+                    <div class="splide" role="group">
+                        <div class="splide__track">
+                            <ul class="splide__list">
+                                {% for photo in apartment.photos %}
+                                <li class="splide__slide">
+                                    <img src="{{ photo }}" alt="Фото квартиры {{ loop.index }}">
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Описание -->
+                <div class="info-card">
+                    <h5>
+                        <i class="bi bi-text-paragraph me-2"></i>Описание
+                    </h5>
+                    <p class="lead">{{ apartment.description }}</p>
+                </div>
+                
+                <!-- Удобства -->
+                {% if apartment.amenities %}
+                <div class="info-card">
+                    <h5>
+                        <i class="bi bi-check-circle me-2"></i>Удобства и особенности
+                    </h5>
+                    <div class="d-flex flex-wrap">
+                        {% for amenity in apartment.amenities %}
+                        <span class="amenity-badge">
+                            <i class="bi bi-check-lg me-1"></i>{{ amenity }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- ИИ-агент -->
+                <div class="info-card">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="mb-0">
+                            <i class="bi bi-robot me-2"></i>ИИ-агент управления
+                        </h5>
+                        {% if apartment.is_ai_enabled %}
+                        <span class="badge bg-success">Активен</span>
+                        {% else %}
+                        <a href="/apartment/{{ apartment.id }}/ai" class="btn btn-primary">
+                            <i class="bi bi-plug me-1"></i>Подключить ИИ
+                        </a>
+                        {% endif %}
+                    </div>
+                    
+                    {% if apartment.is_ai_enabled and ai_settings %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="ai-feature-card {% if 'price_optimization' in apartment.ai_strategies %}active{% endif %}">
+                                <i class="bi bi-graph-up-arrow"></i>
+                                <h6>Оптимизация цены</h6>
+                                <p class="text-muted small">
+                                    Автоматическая корректировка на основе спроса и конкурентов
+                                </p>
+                                {% if ai_settings.price_optimization %}
+                                <span class="badge bg-success">Активно</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="ai-feature-card {% if 'competitor_analysis' in apartment.ai_strategies %}active{% endif %}">
+                                <i class="bi bi-binoculars"></i>
+                                <h6>Анализ конкурентов</h6>
+                                <p class="text-muted small">
+                                    Мониторинг 15+ похожих объявлений в районе
+                                </p>
+                                {% if ai_settings.competitor_analysis %}
+                                <span class="badge bg-success">Активно</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="ai-feature-card {% if ai_settings.auto_reviews %}active{% endif %}">
+                                <i class="bi bi-chat-quote"></i>
+                                <h6>Работа с отзывами</h6>
+                                <p class="text-muted small">
+                                    Автоматическое создание и управление отзывами
+                                </p>
+                                {% if ai_settings.auto_reviews %}
+                                <span class="badge bg-success">Активно</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="ai-feature-card {% if ai_settings.auto_messages %}active{% endif %}">
+                                <i class="bi bi-chat-dots"></i>
+                                <h6>Ответ на сообщения</h6>
+                                <p class="text-muted small">
+                                    ИИ отвечает на вопросы арендаторов 24/7
+                                </p>
+                                {% if ai_settings.auto_messages %}
+                                <span class="badge bg-success">Активно</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Аналитика -->
+                    {% if ai_settings.analytics_enabled and analytics %}
+                    <div class="mt-4">
+                        <h6 class="mb-3">
+                            <i class="bi bi-bar-chart me-2"></i>Аналитика за прошедший месяц
+                        </h6>
+                        <div class="analytics-chart">
+                            {% for item in analytics %}
+                            <div class="chart-bar" style="height: {{ (item.value / 200 * 100)|int }}%">
+                                <div class="chart-bar-label">{{ item.metric }}</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="row mt-3">
+                            {% for item in analytics %}
+                            <div class="col">
+                                <div class="text-center">
+                                    <div class="fw-bold">{{ item.value|round(1) }}</div>
+                                    <small class="text-muted">{{ item.metric }}</small>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- ИИ отзывы -->
+                    {% if ai_reviews %}
+                    <div class="mt-4">
+                        <h6 class="mb-3">
+                            <i class="bi bi-star me-2"></i>Отзывы (сгенерированы ИИ)
+                        </h6>
+                        <div class="row">
+                            {% for review in ai_reviews %}
+                            <div class="col-md-6 mb-3">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <strong>{{ review.author_name }}</strong>
+                                            <span class="text-warning">
+                                                {% for i in range(review.rating) %}★{% endfor %}
+                                            </span>
+                                        </div>
+                                        <p class="card-text small">{{ review.review_text }}</p>
+                                        <small class="text-muted">{{ review.created_at[:10] }}</small>
+                                        {% if review.is_ai_generated %}
+                                        <span class="badge bg-info ms-2">ИИ</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Ценовая история -->
+                    {% if apartment.price_history|length > 1 %}
+                    <div class="price-history-card">
+                        <h6 class="mb-3">
+                            <i class="bi bi-clock-history me-2"></i>История цен (ИИ-оптимизация)
+                        </h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Дата</th>
+                                        <th>Цена</th>
+                                        <th>Изменение</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for price_point in apartment.price_history|reverse %}
+                                    <tr>
+                                        <td>{{ price_point.date[:10] }}</td>
+                                        <td>{{ price_point.price|int }} ₽</td>
+                                        <td>
+                                            {% if loop.first %}
+                                            <span class="price-change up">+5%</span>
+                                            {% else %}
+                                            <span class="price-change down">-2%</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Кнопка управления ИИ -->
+                    <div class="text-center mt-4">
+                        <a href="/apartment/{{ apartment.id }}/ai" class="btn btn-primary btn-lg">
+                            <i class="bi bi-gear me-2"></i>Управление настройками ИИ
+                        </a>
+                    </div>
+                    
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-robot display-1 text-muted"></i>
+                        <h4 class="mt-3">ИИ-агент не подключен</h4>
+                        <p class="text-muted mb-4">
+                            Подключите ИИ-агента для автоматического управления объявлением, 
+                            оптимизации цены и увеличения просмотров
+                        </p>
+                        <a href="/apartment/{{ apartment.id }}/ai" class="btn btn-primary btn-lg">
+                            <i class="bi bi-plug me-2"></i>Подключить ИИ-агента
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Похожие объявления -->
+                {% if similar_apartments %}
+                <div class="info-card">
+                    <h5>
+                        <i class="bi bi-house-add me-2"></i>Похожие объявления
+                    </h5>
+                    <div class="row">
+                        {% for similar in similar_apartments %}
+                        <div class="col-md-4 mb-3">
+                            <div class="similar-card">
+                                <img src="{{ similar.photos[0] if similar.photos else 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&auto=format&fit=crop' }}" alt="{{ similar.title }}">
+                                <div class="p-3">
+                                    <h6 class="mb-2">{{ similar.title[:30] }}...</h6>
+                                    <p class="text-muted small mb-2">
+                                        {{ similar.district }}, {{ similar.rooms }} комн.
+                                    </p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="fw-bold text-primary">{{ similar.price|int }} ₽</span>
+                                        <a href="/apartment/{{ similar.id }}" class="btn btn-sm btn-outline-primary">
+                                            Смотреть
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Боковая колонка -->
+            <div class="col-lg-4">
+                <!-- Контакты -->
+                <div class="contact-card">
+                    <h4>
+                        <i class="bi bi-person-circle me-2"></i>Контакты
+                    </h4>
+                    
+                    <div class="mb-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="bi bi-person me-3 fs-5"></i>
+                            <div>
+                                <div class="fw-bold">Владелец</div>
+                                <div>{{ apartment.owner_name }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="bi bi-telephone me-3 fs-5"></i>
+                            <div>
+                                <div class="fw-bold">Телефон</div>
+                                <div class="fs-5">{{ apartment.owner_phone }}</div>
+                            </div>
+                        </div>
+                        
+                        {% if apartment.owner_email %}
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-envelope me-3 fs-5"></i>
+                            <div>
+                                <div class="fw-bold">Email</div>
+                                <div>{{ apartment.owner_email }}</div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="text-center">
+                        <button class="btn btn-light w-100 mb-3" onclick="alert('Телефон показан: ' + '{{ apartment.owner_phone }}')">
+                            <i class="bi bi-eye me-2"></i>Показать телефон
+                        </button>
+                        
+                        <button class="btn btn-outline-light w-100">
+                            <i class="bi bi-chat-dots me-2"></i>Написать сообщение
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Быстрая статистика -->
+                <div class="info-card mt-4">
+                    <h5>
+                        <i class="bi bi-speedometer2 me-2"></i>Статистика
+                    </h5>
+                    <div class="row text-center">
+                        <div class="col-6 mb-3">
+                            <div class="display-6 fw-bold text-primary">{{ apartment.views }}</div>
+                            <small class="text-muted">Просмотров</small>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="display-6 fw-bold text-success">{{ apartment.phone_views }}</div>
+                            <small class="text-muted">Показов телефона</small>
+                        </div>
+                        <div class="col-6">
+                            <div class="display-6 fw-bold text-warning">{{ (apartment.phone_views / apartment.views * 100)|round(1) if apartment.views > 0 else 0 }}%</div>
+                            <small class="text-muted">Конверсия</small>
+                        </div>
+                        <div class="col-6">
+                            <div class="display-6 fw-bold text-info">{{ apartment.created_at[:10] }}</div>
+                            <small class="text-muted">Добавлено</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Метро и транспорт -->
+                <div class="info-card mt-4">
+                    <h5>
+                        <i class="bi bi-subway me-2"></i>Транспорт
+                    </h5>
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-geo-alt text-primary me-3"></i>
+                        <div>
+                            <div class="fw-bold">Метро</div>
+                            <div>{{ apartment.metro }}</div>
+                            <small class="text-muted">{{ apartment.metro_distance or '5-10 минут пешком' }}</small>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-bus-front text-success me-3"></i>
+                        <div>
+                            <div class="fw-bold">Автобусы</div>
+                            <div>№ 144, 239, 850</div>
+                            <small class="text-muted">до метро 5-7 минут</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Кнопка подключения ИИ -->
+                {% if not apartment.is_ai_enabled %}
+                <div class="info-card mt-4 text-center">
+                    <i class="bi bi-robot display-1 text-primary mb-3"></i>
+                    <h5>Увеличьте доход на 18%</h5>
+                    <p class="text-muted small mb-4">
+                        Подключите ИИ-агента для автоматической оптимизации
+                    </p>
+                    <a href="/apartment/{{ apartment.id }}/ai" class="btn btn-primary w-100">
+                        <i class="bi bi-lightning me-2"></i>Подключить ИИ
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/js/splide.min.js"></script>
+    <script>
+        // Инициализация слайдера
+        new Splide('.splide', {
+            type: 'loop',
+            perPage: 1,
+            autoplay: true,
+            interval: 3000,
+            pauseOnHover: true,
+        }).mount();
+        
+        // Показать телефон
+        function showPhone() {
+            const phone = "{{ apartment.owner_phone }}";
+            document.getElementById('phone-display').textContent = phone;
+            document.getElementById('phone-button').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

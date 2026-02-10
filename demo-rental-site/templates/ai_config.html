@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Настройка ИИ-агента - RentalAI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3a0ca3;
+            --accent-color: #4cc9f0;
+        }
+        
+        .config-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+        
+        .section-header {
+            color: var(--primary-color);
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .strategy-card {
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .strategy-card:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .strategy-card.active {
+            border-color: var(--accent-color);
+            background: linear-gradient(135deg, rgba(76, 201, 240, 0.05) 0%, rgba(67, 97, 238, 0.05) 100%);
+        }
+        
+        .strategy-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+        
+        .feature-toggle {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .feature-toggle:hover {
+            border-color: var(--primary-color);
+            background: rgba(67, 97, 238, 0.02);
+        }
+        
+        .feature-toggle.active {
+            border-color: var(--accent-color);
+            background: rgba(76, 201, 240, 0.05);
+        }
+        
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: var(--accent-color);
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
+        .benefits-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .benefits-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .benefits-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .benefits-list li i {
+            color: var(--accent-color);
+        }
+        
+        .analytics-preview {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            padding: 20px;
+        }
+        
+        .chart-bar {
+            height: 150px;
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .bar {
+            flex: 1;
+            background: var(--primary-color);
+            border-radius: 5px 5px 0 0;
+            position: relative;
+            min-height: 20px;
+        }
+        
+        .bar-label {
+            position: absolute;
+            bottom: -25px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 0.8em;
+            color: #6c757d;
+        }
+        
+        .price-history {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .price-change {
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+        
+        .price-change.up {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .price-change.down {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .summary-card {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 30px;
+            position: sticky;
+            top: 20px;
+        }
+        
+        .cost-breakdown {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Навигация -->
+    <nav class="navbar navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-house-heart-fill me-2"></i>
+                <span style="color: var(--primary-color);">Rental</span><span style="color: var(--accent-color);">AI</span>
+            </a>
+            <div>
+                <a href="/apartment/{{ apartment.id }}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i>Назад к объявлению
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <div class="row">
+            <!-- Основная конфигурация -->
+            <div class="col-lg-8">
+                <h1 class="fw-bold mb-4">Настройка ИИ-агента</h1>
+                <p class="lead mb-5">Настройте автоматическое управление вашим объявлением "{{ apartment.title }}"</p>
+                
+                <form method="post" action="/api/apartment/{{ apartment.id }}/ai">
+                    <!-- Стратегии ИИ -->
+                    <div class="config-section">
+                        <h3 class="section-header">
+                            <i class="bi bi-gear"></i>Основные стратегии
+                        </h3>
+                        
+                        <div class="row">
+                            {% for strategy in strategies_list %}
+                            <div class="col-md-6">
+                                <div class="strategy-card {% if strategy.id in ai_settings.strategies %}active{% endif %}" 
+                                     onclick="toggleStrategyCard(this, '{{ strategy.id }}')">
+                                    <div class="strategy-icon">
+                                        {% if strategy.id == 'price_optimization' %}
+                                        <i class="bi bi-graph-up-arrow"></i>
+                                        {% elif strategy.id == 'competitor_analysis' %}
+                                        <i class="bi bi-binoculars"></i>
+                                        {% elif strategy.id == 'demand_prediction' %}
+                                        <i class="bi bi-lightning"></i>
+                                        {% elif strategy.id == 'review_generation' %}
+                                        <i class="bi bi-chat-quote"></i>
+                                        {% elif strategy.id == 'auto_messaging' %}
+                                        <i class="bi bi-chat-dots"></i>
+                                        {% elif strategy.id == 'analytics' %}
+                                        <i class="bi bi-bar-chart"></i>
+                                        {% else %}
+                                        <i class="bi bi-robot"></i>
+                                        {% endif %}
+                                    </div>
+                                    <h5>{{ strategy.name }}</h5>
+                                    <p class="text-muted small">{{ strategy.desc }}</p>
+                                    <input type="checkbox" name="strategies" value="{{ strategy.id }}" 
+                                           {% if strategy.id in ai_settings.strategies %}checked{% endif %} 
+                                           style="display: none;">
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <!-- Дополнительные функции -->
+                    <div class="config-section">
+                        <h3 class="section-header">
+                            <i class="bi bi-sliders"></i>Дополнительные функции
+                        </h3>
+                        
+                        <div class="feature-toggle {% if ai_settings.auto_reviews %}active{% endif %}" onclick="toggleFeature(this, 'auto_reviews')">
+                            <div>
+                                <h6 class="mb-1">Автоматическая работа с отзывами</h6>
+                                <p class="text-muted small mb-0">
+                                    ИИ создает и публикует позитивные отзывы, отвечает на негативные
+                                </p>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" name="auto_reviews" {% if ai_settings.auto_reviews %}checked{% endif %}>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        
+                        <div class="feature-toggle {% if ai_settings.auto_messages %}active{% endif %}" onclick="toggleFeature(this, 'auto_messages')">
+                            <div>
+                                <h6 class="mb-1">Автоответы на сообщения</h6>
+                                <p class="text-muted small mb-0">
+                                    ИИ отвечает на вопросы арендаторов 24/7 в личном кабинете
+                                </p>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" name="auto_messages" {% if ai_settings.auto_messages %}checked{% endif %}>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        
+                        <div class="feature-toggle {% if ai_settings.analytics_enabled %}active{% endif %}" onclick="toggleFeature(this, 'analytics_enabled')">
+                            <div>
+                                <h6 class="mb-1">Подробная аналитика по объявлению</h6>
+                                <p class="text-muted small mb-0">
+                                    Ежемесячные отчеты, графики просмотров, анализ конверсии
+                                </p>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" name="analytics_enabled" {% if ai_settings.analytics_enabled %}checked{% endif %}>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        
+                        <div class="feature-toggle {% if ai_settings.notifications_enabled %}active{% endif %}" onclick="toggleFeature(this, 'notifications_enabled')">
+                            <div>
+                                <h6 class="mb-1">Уведомления и рекомендации</h6>
+                                <p class="text-muted small mb-0">
+                                    Push-уведомления и email с советами по улучшению объявления
+                                </p>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" name="notifications_enabled" {% if ai_settings.notifications_enabled %}checked{% endif %}>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Оптимизация цены -->
+                    <div class="config-section">
+                        <h3 class="section-header">
+                            <i class="bi bi-currency-exchange"></i>Оптимизация цены
+                        </h3>
+                        
+                        <div class="feature-toggle {% if ai_settings.price_optimization %}active{% endif %}" onclick="toggleFeature(this, 'price_optimization')">
+                            <div>
+                                <h6 class="mb-1">Автоматическая корректировка цены</h6>
+                                <p class="text-muted small mb-0">
+                                    ИИ анализирует спрос и конкурентов, корректирует цену для максимального дохода
+                                </p>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" name="price_optimization" {% if ai_settings.price_optimization %}checked{% endif %}>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        
+                        <div class="analytics-preview">
+                            <h6>Прогноз ИИ при включенной оптимизации:</h6>
+                            <div class="chart-bar">
+                                <div class="bar" style="height: 70%;">
+                                    <div class="bar-label">Текущая</div>
+                                </div>
+                                <div class="bar" style="height: 85%; background: var(--accent-color);">
+                                    <div class="bar-label">С ИИ</div>
+                                </div>
+                            </div>
+                            
+                            <div class="price-history">
+                                <h6>История цен:</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Дата</th>
+                                                <th>Цена</th>
+                                                <th>Изменение</th>
+                                                <th>Причина</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>10.02.2024</td>
+                                                <td>45 000 ₽</td>
+                                                <td><span class="price-change up">+5%</span></td>
+                                                <td>Рост спроса в районе</td>
+                                            </tr>
+                                            <tr>
+                                                <td>03.02.2024</td>
+                                                <td>43 000 ₽</td>
+                                                <td><span class="price-change down">-3%</span></td>
+                                                <td>Снижение активности конкурентов</td>
+                                            </tr>
+                                            <tr>
+                                                <td>27.01.2024</td>
+                                                <td>44 300 ₽</td>
+                                                <td><span class="price-change up">+2%</span></td>
+                                                <td>Сезонный рост спроса</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Анализ конкурентов -->
+                    <div class="config-section">
+                        <h3 class="section-header">
+                            <i class="bi bi-binoculars"></i>Анализ конкурентов
+                        </h3>
+                        
+                        <div class="feature-toggle {% if ai_settings.competitor_analysis %}active{% endif %}" onclick="toggleFeature(this, 'competitor_analysis')">
+                            <div>
+                                <h6 class="mb-1">Мониторинг конкурентов</h6>
+                                <p class="text-muted small mb-0">
+                                    ИИ отслеживает 15+ похожих объявлений в вашем районе
+                                </p>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" name="competitor_analysis" {% if ai_settings.competitor_analysis %}checked{% endif %}>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <h6><i class="bi bi-info-circle me-2"></i>Что отслеживает ИИ:</h6>
+                            <ul class="benefits-list">
+                                <li><i class="bi bi-check-circle"></i> Цены конкурентов в реальном времени</li>
+                                <li><i class="bi bi-check-circle"></i> Скорость аренды похожих объектов</li>
+                                <li><i class="bi bi-check-circle"></i> Удобства и особенности конкурентов</li>
+                                <li><i class="bi bi-check-circle"></i> Отзывы и рейтинги</li>
+                                <li><i class="bi bi-check-circle"></i> Активность просмотров</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <!-- Кнопки действий -->
+                    <div class="config-section">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <a href="/apartment/{{ apartment.id }}" class="btn btn-outline-secondary w-100 py-3">
+                                    <i class="bi bi-x-circle me-2"></i>Отмена
+                                </a>
+                            </div>
+                            <div class="col-md-6">
+                                <button type="submit" class="btn btn-primary w-100 py-3">
+                                    <i class="bi bi-check-circle me-2"></i>Сохранить настройки ИИ
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Боковая панель -->
+            <div class="col-lg-4">
+                <!-- Сводка -->
+                <div class="summary-card">
+                    <h4 class="mb-4">
+                        <i class="bi bi-robot me-2"></i>Сводка
+                    </h4>
+                    
+                    <div class="mb-4">
+                        <h6>Объявление:</h6>
+                        <p class="mb-2">{{ apartment.title }}</p>
+                        <p class="mb-0">
+                            <i class="bi bi-geo-alt me-1"></i>
+                            {{ apartment.district }}, {{ apartment.rooms }} комн.
+                        </p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h6>Текущая цена:</h6>
+                        <h2 class="fw-bold">{{ apartment.price|int }} ₽/мес</h2>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h6>Прогноз ИИ:</h6>
+                        <div class="d-flex align-items-center">
+                            <div class="display-6 fw-bold me-3" id="predictedPrice">{{ (apartment.price * 1.15)|int }} ₽</div>
+                            <span class="badge bg-success">+15%</span>
+                        </div>
+                        <small class="text-light">Оптимальная цена по данным ИИ</small>
+                    </div>
+                    
+                    <div class="cost-breakdown">
+                        <h6>Эффект от ИИ:</h6>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Текущий доход:</span>
+                            <span>{{ apartment.price|int }} ₽</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>С ИИ (прогноз):</span>
+                            <span>{{ (apartment.price * 1.18)|int }} ₽</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Дополнительный доход:</span>
+                            <span class="text-success">+{{ (apartment.price * 0.18)|int }} ₽/мес</span>
+                        </div>
+                        <hr class="my-2">
+                        <div class="d-flex justify-content-between">
+                            <span>За год:</span>
+                            <span class="fw-bold text-success">+{{ (apartment.price * 0.18 * 12)|int }} ₽</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Преимущества ИИ -->
+                <div class="config-section mt-4">
+                    <h5 class="mb-4">
+                        <i class="bi bi-lightning me-2"></i>Что дает ИИ-агент
+                    </h5>
+                    
+                    <ul class="benefits-list">
+                        <li><i class="bi bi-check-circle"></i> Автоматическая оптимизация цены</li>
+                        <li><i class="bi bi-check-circle"></i> 24/7 ответы на сообщения</li>
+                        <li><i class="bi bi-check-circle"></i> Генерация позитивных отзывов</li>
+                        <li><i class="bi bi-check-circle"></i> Подробная аналитика</li>
+                        <li><i class="bi bi-check-circle"></i> Уведомления о важном</li>
+                        <li><i class="bi bi-check-circle"></i> Анализ конкурентов</li>
+                    </ul>
+                    
+                    <div class="alert alert-success mt-4">
+                        <h6><i class="bi bi-graph-up me-2"></i>Средние результаты:</h6>
+                        <p class="mb-2">+35% просмотров</p>
+                        <p class="mb-2">+22% конверсия</p>
+                        <p class="mb-0">+18% доход</p>
+                    </div>
+                </div>
+                
+                <!-- Пример отчета -->
+                <div class="config-section mt-4">
+                    <h5 class="mb-4">
+                        <i class="bi bi-file-earmark-bar-graph me-2"></i>Пример отчета за месяц
+                    </h5>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <tbody>
+                                <tr>
+                                    <td>Просмотры:</td>
+                                    <td class="text-end">156</td>
+                                    <td class="text-end text-success">+35%</td>
+                                </tr>
+                                <tr>
+                                    <td>Контакты:</td>
+                                    <td class="text-end">28</td>
+                                    <td class="text-end text-success">+22%</td>
+                                </tr>
+                                <tr>
+                                    <td>Среднее время ответа:</td>
+                                    <td class="text-end">5 мин</td>
+                                    <td class="text-end text-success">-65%</td>
+                                </tr>
+                                <tr>
+                                    <td>Рейтинг:</td>
+                                    <td class="text-end">4.8/5</td>
+                                    <td class="text-end text-success">+0.7</td>
+                                </tr>
+                                <tr>
+                                    <td>Доход:</td>
+                                    <td class="text-end">{{ (apartment.price * 1.18)|int }} ₽</td>
+                                    <td class="text-end text-success">+18%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Переключение карточек стратегий
+        function toggleStrategyCard(card, strategyId) {
+            const checkbox = card.querySelector('input[type="checkbox"]');
+            
+            if (card.classList.contains('active')) {
+                card.classList.remove('active');
+                checkbox.checked = false;
+            } else {
+                card.classList.add('active');
+                checkbox.checked = true;
+            }
+            
+            updatePricePrediction();
+        }
+        
+        // Переключение функций
+        function toggleFeature(toggle, featureName) {
+            const checkbox = toggle.querySelector('input[type="checkbox"]');
+            
+            if (toggle.classList.contains('active')) {
+                toggle.classList.remove('active');
+                checkbox.checked = false;
+            } else {
+                toggle.classList.add('active');
+                checkbox.checked = true;
+            }
+            
+            updatePricePrediction();
+        }
+        
+        // Обновление прогноза цены
+        function updatePricePrediction() {
+            const basePrice = {{ apartment.price }};
+            let multiplier = 1.0;
+            
+            // Проверяем выбранные стратегии
+            const selectedStrategies = document.querySelectorAll('[name="strategies"]:checked');
+            const priceOptimization = document.querySelector('[name="price_optimization"]:checked');
+            const competitorAnalysis = document.querySelector('[name="competitor_analysis"]:checked');
+            
+            if (selectedStrategies.length > 0) multiplier += 0.05;
+            if (priceOptimization) multiplier += 0.08;
+            if (competitorAnalysis) multiplier += 0.02;
+            
+            const predictedPrice = Math.round(basePrice * multiplier);
+            const increasePercent = Math.round((multiplier - 1) * 100);
+            
+            document.getElementById('predictedPrice').textContent = predictedPrice.toLocaleString() + ' ₽';
+            
+            // Обновляем badge
+            const badge = document.querySelector('#predictedPrice + .badge');
+            badge.textContent = `+${increasePercent}%`;
+            badge.className = `badge bg-${increasePercent > 0 ? 'success' : 'danger'}`;
+        }
+        
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            updatePricePrediction();
+            
+            // Инициализация переключателей
+            document.querySelectorAll('.feature-toggle').forEach(toggle => {
+                const checkbox = toggle.querySelector('input[type="checkbox"]');
+                if (checkbox.checked) {
+                    toggle.classList.add('active');
+                }
+            });
+            
+            // Инициализация карточек стратегий
+            document.querySelectorAll('.strategy-card').forEach(card => {
+                const checkbox = card.querySelector('input[type="checkbox"]');
+                if (checkbox.checked) {
+                    card.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

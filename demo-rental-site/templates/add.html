@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Добавить объявление - RentalAI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3a0ca3;
+            --accent-color: #4cc9f0;
+        }
+        
+        .form-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+        
+        .section-header {
+            color: var(--primary-color);
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .ai-toggle-card {
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+        }
+        
+        .ai-toggle-card:hover {
+            border-color: var(--primary-color);
+            background: rgba(67, 97, 238, 0.02);
+        }
+        
+        .ai-toggle-card.active {
+            border-color: var(--accent-color);
+            background: linear-gradient(135deg, rgba(76, 201, 240, 0.05) 0%, rgba(67, 97, 238, 0.05) 100%);
+        }
+        
+        .ai-toggle-card.active .ai-badge {
+            background: var(--accent-color);
+            color: white;
+        }
+        
+        .ai-badge {
+            background: #e9ecef;
+            color: #6c757d;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+        
+        .strategy-card {
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .strategy-card:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        
+        .strategy-card.active {
+            border-color: var(--accent-color);
+            background: rgba(76, 201, 240, 0.05);
+        }
+        
+        .strategy-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+        
+        .benefit-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .benefit-list li {
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .benefit-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .benefit-list li i {
+            color: var(--accent-color);
+            margin-right: 10px;
+        }
+        
+        .preview-card {
+            position: sticky;
+            top: 20px;
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        
+        .preview-image {
+            width: 100%;
+            height: 150px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+            margin-bottom: 20px;
+        }
+        
+        .form-stepper {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        .form-stepper::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #dee2e6;
+            z-index: 1;
+        }
+        
+        .step {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            flex: 1;
+        }
+        
+        .step-circle {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #e9ecef;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-weight: 600;
+        }
+        
+        .step.active .step-circle {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .step.completed .step-circle {
+            background: var(--accent-color);
+            color: white;
+        }
+        
+        .step-label {
+            font-size: 0.8em;
+            color: #6c757d;
+        }
+        
+        .step.active .step-label {
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+        
+        .form-tab {
+            display: none;
+        }
+        
+        .form-tab.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+    <!-- Навигация -->
+    <nav class="navbar navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-house-heart-fill me-2"></i>
+                <span style="color: var(--primary-color);">Rental</span><span style="color: var(--accent-color);">AI</span>
+            </a>
+            <div>
+                <a href="/apartments" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-x-lg me-1"></i>Отмена
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-5">
+        <div class="row">
+            <!-- Основная форма -->
+            <div class="col-lg-8">
+                <h1 class="fw-bold mb-4">Добавить объявление об аренде</h1>
+                
+                <!-- Степпер -->
+                <div class="form-stepper">
+                    <div class="step active" id="step1">
+                        <div class="step-circle">1</div>
+                        <div class="step-label">Основное</div>
+                    </div>
+                    <div class="step" id="step2">
+                        <div class="step-circle">2</div>
+                        <div class="step-label">Описание</div>
+                    </div>
+                    <div class="step" id="step3">
+                        <div class="step-circle">3</div>
+                        <div class="step-label">ИИ-агент</div>
+                    </div>
+                    <div class="step" id="step4">
+                        <div class="step-circle">4</div>
+                        <div class="step-label">Готово</div>
+                    </div>
+                </div>
+                
+                <!-- Форма -->
+                <form method="post" action="/api/apartments" id="apartmentForm">
+                    <!-- Шаг 1: Основное -->
+                    <div class="form-tab active" id="tab1">
+                        <div class="form-section">
+                            <h3 class="section-header">
+                                <i class="bi bi-house-door"></i>Основная информация
+                            </h3>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Название объявления *</label>
+                                    <input type="text" class="form-control" name="title" required placeholder="Например: 2-комнатная квартира в ЦАО">
+                                </div>
+                                
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label fw-bold">Цена, ₽/мес *</label>
+                                    <input type="number" class="form-control" name="price" required min="10000" max="500000" placeholder="45000">
+                                </div>
+                                
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label fw-bold">Комнат *</label>
+                                    <select class="form-select" name="rooms" required>
+                                        <option value="">Выберите</option>
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                        <option value="3">3</option>
+                                        <option value="4">4</option>
+                                        <option value="5">5+</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Площадь, м² *</label>
+                                    <input type="number" step="0.1" class="form-control" name="area" required placeholder="45.5">
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Район *</label>
+                                    <select class="form-select" name="district" required>
+                                        <option value="">Выберите район</option>
+                                        {% for district in districts %}
+                                        <option value="{{ district }}">{{ district }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Метро *</label>
+                                    <select class="form-select" name="metro" required>
+                                        <option value="">Выберите станцию метро</option>
+                                        {% for metro in metros %}
+                                        <option value="{{ metro }}">{{ metro }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Адрес *</label>
+                                    <input type="text" class="form-control" name="address" required placeholder="ул. Примерная, д. 15, кв. 42">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-outline-secondary" disabled>Назад</button>
+                            <button type="button" class="btn btn-primary" onclick="nextTab(2)">Далее: Описание</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Шаг 2: Описание и удобства -->
+                    <div class="form-tab" id="tab2">
+                        <div class="form-section">
+                            <h3 class="section-header">
+                                <i class="bi bi-text-paragraph"></i>Описание и удобства
+                            </h3>
+                            
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Подробное описание *</label>
+                                <textarea class="form-control" name="description" rows="5" required placeholder="Опишите квартиру: ремонт, техника, расположение, особенности..."></textarea>
+                                <div class="form-text">Чем подробнее описание, тем больше откликов</div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Удобства</label>
+                                <div class="row">
+                                    {% for amenity in amenities_list %}
+                                    <div class="col-md-3 col-6 mb-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="amenities" value="{{ amenity }}" id="amenity{{ loop.index }}">
+                                            <label class="form-check-label" for="amenity{{ loop.index }}">
+                                                {{ amenity }}
+                                            </label>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-outline-secondary" onclick="prevTab(1)">Назад</button>
+                            <button type="button" class="btn btn-primary" onclick="nextTab(3)">Далее: ИИ-агент</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Шаг 3: ИИ-агент -->
+                    <div class="form-tab" id="tab3">
+                        <div class="form-section">
+                            <h3 class="section-header">
+                                <i class="bi bi-robot"></i>Подключение ИИ-агента
+                            </h3>
+                            
+                            <div class="mb-4">
+                                <div class="ai-toggle-card" id="aiToggle" onclick="toggleAI()">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h5 class="mb-1">ИИ-агент управления</h5>
+                                            <p class="text-muted mb-0">
+                                                Автоматическая оптимизация цены, работа с клиентами и аналитика
+                                            </p>
+                                        </div>
+                                        <span class="ai-badge" id="aiStatus">Выкл</span>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="is_ai_enabled" id="isAiEnabled" value="false">
+                            </div>
+                            
+                            <!-- Стратегии ИИ (скрыто по умолчанию) -->
+                            <div id="aiStrategiesSection" style="display: none;">
+                                <h5 class="mb-3">Выберите стратегии ИИ-агента:</h5>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="strategy-card" onclick="toggleStrategy('price_optimization')" id="strategyPrice">
+                                            <div class="strategy-icon">
+                                                <i class="bi bi-graph-up-arrow"></i>
+                                            </div>
+                                            <h6>Оптимизация цены</h6>
+                                            <p class="text-muted small">
+                                                Автоматическая корректировка цены на основе спроса и конкурентов
+                                            </p>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="ai_strategies" value="price_optimization" style="display: none;">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <div class="strategy-card" onclick="toggleStrategy('competitor_analysis')" id="strategyCompetitor">
+                                            <div class="strategy-icon">
+                                                <i class="bi bi-binoculars"></i>
+                                            </div>
+                                            <h6>Анализ конкурентов</h6>
+                                            <p class="text-muted small">
+                                                Мониторинг цен и активности конкурентов в вашем районе
+                                            </p>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="ai_strategies" value="competitor_analysis" style="display: none;">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <div class="strategy-card" onclick="toggleStrategy('review_generation')" id="strategyReviews">
+                                            <div class="strategy-icon">
+                                                <i class="bi bi-chat-quote"></i>
+                                            </div>
+                                            <h6>Работа с отзывами</h6>
+                                            <p class="text-muted small">
+                                                Автоматическое создание и управление отзывами об аренде
+                                            </p>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="ai_strategies" value="review_generation" style="display: none;">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <div class="strategy-card" onclick="toggleStrategy('auto_messaging')" id="strategyMessages">
+                                            <div class="strategy-icon">
+                                                <i class="bi bi-chat-dots"></i>
+                                            </div>
+                                            <h6>Ответ на сообщения</h6>
+                                            <p class="text-muted small">
+                                                ИИ отвечает на вопросы арендаторов 24/7 в чате
+                                            </p>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="ai_strategies" value="auto_messaging" style="display: none;">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Преимущества -->
+                                <div class="alert alert-success mt-4">
+                                    <h6><i class="bi bi-lightning me-2"></i>Преимущества ИИ-агента:</h6>
+                                    <ul class="benefit-list">
+                                        <li><i class="bi bi-check-circle"></i> Увеличивает просмотры на 35%</li>
+                                        <li><i class="bi bi-check-circle"></i> Повышает доход на 18% в среднем</li>
+                                        <li><i class="bi bi-check-circle"></i> Экономит 10+ часов в месяц</li>
+                                        <li><i class="bi bi-check-circle"></i> Улучшает конверсию на 22%</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <!-- Без ИИ -->
+                            <div id="noAiSection">
+                                <div class="alert alert-info">
+                                    <h6><i class="bi bi-info-circle me-2"></i>Рекомендация:</h6>
+                                    <p>Объявления с ИИ-агентом получают в 2.5 раза больше просмотров и сдаются на 30% быстрее.</p>
+                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="enableAI()">
+                                        <i class="bi bi-robot me-1"></i>Попробовать ИИ бесплатно
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-section">
+                            <h3 class="section-header">
+                                <i class="bi bi-person-circle"></i>Контактная информация
+                            </h3>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Имя владельца *</label>
+                                    <input type="text" class="form-control" name="owner_name" required placeholder="Иван Иванов">
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">Телефон *</label>
+                                    <input type="tel" class="form-control" name="owner_phone" required placeholder="+7 (900) 123-45-67">
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Email</label>
+                                <input type="email" class="form-control" name="owner_email" placeholder="example@mail.ru">
+                                <div class="form-text">Для уведомлений от ИИ-агента</div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-outline-secondary" onclick="prevTab(2)">Назад</button>
+                            <button type="button" class="btn btn-primary" onclick="showPreview()">Просмотр и публикация</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Шаг 4: Превью -->
+                    <div class="form-tab" id="tab4">
+                        <div class="form-section">
+                            <h3 class="section-header">
+                                <i class="bi bi-eye"></i>Просмотр объявления
+                            </h3>
+                            
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="preview-card mb-4">
+                                        <h4 id="previewTitle">Название</h4>
+                                        <p class="text-muted" id="previewAddress">Адрес</p>
+                                        
+                                        <div class="d-flex align-items-center gap-4 mb-3">
+                                            <span class="price-tag" id="previewPrice">0 ₽</span>
+                                            <span class="badge bg-secondary" id="previewRooms">0 комн.</span>
+                                            <span class="badge bg-light text-dark" id="previewArea">0 м²</span>
+                                        </div>
+                                        
+                                        <p id="previewDescription">Описание</p>
+                                        
+                                        <div class="mt-4">
+                                            <h6>Удобства:</h6>
+                                            <div id="previewAmenities" class="d-flex flex-wrap gap-2"></div>
+                                        </div>
+                                        
+                                        <div class="mt-4" id="previewAI" style="display: none;">
+                                            <div class="alert alert-primary">
+                                                <h6><i class="bi bi-robot me-2"></i>ИИ-агент подключен</h6>
+                                                <p>Стратегии: <span id="previewStrategies"></span></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="alert alert-success">
+                                        <h6><i class="bi bi-check-circle me-2"></i>Готово к публикации!</h6>
+                                        <p>Ваше объявление будет опубликовано сразу после нажатия кнопки. Вы сможете редактировать его в любое время.</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <div class="preview-card">
+                                        <div class="preview-image">
+                                            <i class="bi bi-image display-4"></i>
+                                        </div>
+                                        
+                                        <h6>Контактная информация:</h6>
+                                        <p class="mb-1"><strong id="previewOwner">Имя</strong></p>
+                                        <p class="mb-1" id="previewPhone">Телефон</p>
+                                        <p class="mb-0" id="previewEmail">Email</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-outline-secondary" onclick="prevTab(3)">Назад к редактированию</button>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle me-2"></i>Опубликовать объявление
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Боковая панель -->
+            <div class="col-lg-4">
+                <div class="preview-card">
+                    <h5 class="mb-4">
+                        <i class="bi bi-lightbulb me-2"></i>Советы для успеха
+                    </h5>
+                    
+                    <div class="mb-4">
+                        <h6>📷 Добавьте фото</h6>
+                        <p class="text-muted small">Объявления с 5+ фото получают в 3 раза больше откликов</p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h6>📝 Детальное описание</h6>
+                        <p class="text-muted small">Опишите все преимущества: ремонт, технику, транспорт, инфраструктуру</p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h6>🤖 Подключите ИИ-агента</h6>
+                        <p class="text-muted small">Автоматическая оптимизация повышает доход на 18% в среднем</p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <h6>💰 Реалистичная цена</h6>
+                        <p class="text-muted small">ИИ-агент поможет найти оптимальную цену для быстрой аренды</p>
+                    </div>
+                </div>
+                
+                <!-- Статистика ИИ -->
+                <div class="preview-card mt-4">
+                    <h5 class="mb-4">
+                        <i class="bi bi-graph-up me-2"></i>Эффект ИИ-агента
+                    </h5>
+                    
+                    <div class="row text-center">
+                        <div class="col-6 mb-3">
+                            <div class="display-6 fw-bold text-success">+35%</div>
+                            <small class="text-muted">Просмотров</small>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="display-6 fw-bold text-success">+22%</div>
+                            <small class="text-muted">Конверсия</small>
+                        </div>
+                        <div class="col-6">
+                            <div class="display-6 fw-bold text-success">+18%</div>
+                            <small class="text-muted">Доход</small>
+                        </div>
+                        <div class="col-6">
+                            <div class="display-6 fw-bold text-success">-65%</div>
+                            <small class="text-muted">Время на управление</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        // Текущий активный таб
+        let currentTab = 1;
+        
+        // Переключение табов
+        function showTab(tabNumber) {
+            // Скрываем все табы
+            document.querySelectorAll('.form-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Показываем нужный таб
+            document.getElementById(`tab${tabNumber}`).classList.add('active');
+            
+            // Обновляем степпер
+            document.querySelectorAll('.step').forEach(step => {
+                step.classList.remove('active', 'completed');
+            });
+            
+            for (let i = 1; i <= 4; i++) {
+                const step = document.getElementById(`step${i}`);
+                if (i === tabNumber) {
+                    step.classList.add('active');
+                } else if (i < tabNumber) {
+                    step.classList.add('completed');
+                }
+            }
+            
+            currentTab = tabNumber;
+        }
+        
+        function nextTab(next) {
+            if (validateCurrentTab()) {
+                showTab(next);
+            }
+        }
+        
+        function prevTab(prev) {
+            showTab(prev);
+        }
+        
+        // Валидация таба
+        function validateCurrentTab() {
+            const tab = document.getElementById(`tab${currentTab}`);
+            const inputs = tab.querySelectorAll('[required]');
+            
+            for (let input of inputs) {
+                if (!input.value.trim()) {
+                    input.focus();
+                    input.classList.add('is-invalid');
+                    return false;
+                } else {
+                    input.classList.remove('is-invalid');
+                }
+            }
+            
+            return true;
+        }
+        
+        // ИИ переключатель
+        function toggleAI() {
+            const toggle = document.getElementById('aiToggle');
+            const status = document.getElementById('aiStatus');
+            const enabled = document.getElementById('isAiEnabled');
+            const strategiesSection = document.getElementById('aiStrategiesSection');
+            const noAiSection = document.getElementById('noAiSection');
+            
+            if (toggle.classList.contains('active')) {
+                // Выключаем ИИ
+                toggle.classList.remove('active');
+                status.textContent = 'Выкл';
+                enabled.value = 'false';
+                strategiesSection.style.display = 'none';
+                noAiSection.style.display = 'block';
+                
+                // Сбрасываем стратегии
+                document.querySelectorAll('[name="ai_strategies"]').forEach(cb => {
+                    cb.checked = false;
+                    document.getElementById(`strategy${cb.value.charAt(0).toUpperCase() + cb.value.slice(1)}`)?.classList.remove('active');
+                });
+            } else {
+                // Включаем ИИ
+                toggle.classList.add('active');
+                status.textContent = 'Вкл';
+                enabled.value = 'true';
+                strategiesSection.style.display = 'block';
+                noAiSection.style.display = 'none';
+            }
+        }
+        
+        function enableAI() {
+            document.getElementById('aiToggle').click();
+        }
+        
+        // Стратегии ИИ
+        function toggleStrategy(strategy) {
+            const card = document.getElementById(`strategy${strategy.charAt(0).toUpperCase() + strategy.slice(1)}`);
+            const checkbox = card.querySelector('input[type="checkbox"]');
+            
+            if (card.classList.contains('active')) {
+                card.classList.remove('active');
+                checkbox.checked = false;
+            } else {
+                card.classList.add('active');
+                checkbox.checked = true;
+            }
+        }
+        
+        // Превью
+        function showPreview() {
+            if (!validateCurrentTab()) {
+                return;
+            }
+            
+            // Собираем данные
+            const form = document.getElementById('apartmentForm');
+            const formData = new FormData(form);
+            
+            // Заполняем превью
+            document.getElementById('previewTitle').textContent = formData.get('title') || 'Без названия';
+            document.getElementById('previewAddress').textContent = formData.get('address') || 'Адрес не указан';
+            document.getElementById('previewPrice').textContent = (formData.get('price') || '0') + ' ₽/мес';
+            document.getElementById('previewRooms').textContent = (formData.get('rooms') || '0') + ' комн.';
+            document.getElementById('previewArea').textContent = (formData.get('area') || '0') + ' м²';
+            document.getElementById('previewDescription').textContent = formData.get('description') || 'Описание отсутствует';
+            document.getElementById('previewOwner').textContent = formData.get('owner_name') || 'Не указано';
+            document.getElementById('previewPhone').textContent = formData.get('owner_phone') || 'Не указано';
+            document.getElementById('previewEmail').textContent = formData.get('owner_email') || 'Не указано';
+            
+            // Удобства
+            const amenitiesContainer = document.getElementById('previewAmenities');
+            amenitiesContainer.innerHTML = '';
+            const amenities = formData.getAll('amenities');
+            if (amenities.length > 0) {
+                amenities.forEach(amenity => {
+                    const badge = document.createElement('span');
+                    badge.className = 'badge bg-light text-dark';
+                    badge.textContent = amenity;
+                    amenitiesContainer.appendChild(badge);
+                });
+            } else {
+                amenitiesContainer.innerHTML = '<span class="text-muted">Не указаны</span>';
+            }
+            
+            // ИИ
+            const aiSection = document.getElementById('previewAI');
+            const strategiesContainer = document.getElementById('previewStrategies');
+            if (formData.get('is_ai_enabled') === 'true') {
+                aiSection.style.display = 'block';
+                const strategies = formData.getAll('ai_strategies');
+                strategiesContainer.textContent = strategies.join(', ') || 'не выбраны';
+            } else {
+                aiSection.style.display = 'none';
+            }
+            
+            // Показываем превью
+            showTab(4);
+        }
+        
+        // Инициализация Select2
+        document.addEventListener('DOMContentLoaded', function() {
+            // Инициализация степпера
+            showTab(1);
+            
+            // Инициализация ИИ секции
+            document.getElementById('noAiSection').style.display = 'block';
+        });
+    </script>
+</body>
+</html>
